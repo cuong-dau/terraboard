@@ -218,7 +218,7 @@ func main() {
 	go serveSwagger(int(c.Web.SwaggerPort), swaggerRouter)
 
 	// Serve static files (CSS, JS, images) from dir
-	spa := spaHandler{staticPath: "static/terraboard-vuejs/dist", indexPath: "index.html"}
+	spa := spaHandler{staticPath: "static", indexPath: "index.html"}
 	r.PathPrefix("/").Handler(spa)
 
 	// Add CORS Middleware to mux router
