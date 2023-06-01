@@ -65,6 +65,7 @@ type S3BucketConfig struct {
 
 // AWSConfig stores the DynamoDB table and S3 Bucket configuration
 type AWSConfig struct {
+	Profile         string           `long:"aws-profile" env:"AWS_PROFILE" yaml:"profile" description:"AWS profile."`
 	AccessKey       string           `long:"aws-access-key" env:"AWS_ACCESS_KEY_ID" yaml:"access-key" description:"AWS account access key."`
 	SecretAccessKey string           `long:"aws-secret-access-key" env:"AWS_SECRET_ACCESS_KEY" yaml:"secret-access-key" description:"AWS secret account access key."`
 	SessionToken    string           `long:"aws-session-token" env:"AWS_SESSION_TOKEN" yaml:"session-token" description:"AWS session token."`

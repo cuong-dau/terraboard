@@ -26,6 +26,8 @@
               <th>
                   Activity
               </th>
+              <th>
+              </th>
           </thead>
           <tbody>
               <tr v-for="(r, index) in results.states" v-bind:key="r">
@@ -39,6 +41,11 @@
                       <canvas v-bind:id="'spark-'+index" width="200" height="70" style="max-width: 200px; max-height: 70px;">
                         {{getActivity(index, r.lineage_value, 'spark-'+index)}}
                       </canvas>
+                  </td>
+                  <td class="align-middle">
+                    <button @click="destroyState(r.lineage_value)" class="btn btn-danger">
+                      Destroy.
+                    </button>
                   </td>
               </tr>
           </tbody>
@@ -68,6 +75,12 @@ Chart.register( CategoryScale, LineElement, LineController, LinearScale, PointEl
       startItems: 0,
       itemsInPage: 0,
       itemsPerPage: 20,
+      count: 0,
+      customMessages: [
+        'Destroy',
+        'Are you sure?',
+        'Ok!'
+      ],
     }
   },
   methods: {
@@ -216,6 +229,10 @@ Chart.register( CategoryScale, LineElement, LineController, LinearScale, PointEl
         .then(function () {
           // always executed
         });
+    },
+    destroyState(lineage: string): void {
+      const url = `/api/lineages/` + lineage + `/destroy`;
+      console.log(`Destroy ${lineage}`);
     }
   },
   created() {

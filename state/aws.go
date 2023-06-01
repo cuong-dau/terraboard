@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	aws_sdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -49,6 +48,13 @@ func NewAWS(aws config.AWSConfig, bucket config.S3BucketConfig, noLocks, noVersi
 				p.ExternalID = aws_sdk.String(aws.ExternalID)
 			}
 		})
+	} else if len(aws.Profile) > 0 {
+		profile_session, err := session.NewSessionWithOptions(session.Options{Profile: aws.Profile})
+		if err != nil {
+			fmt.Println("Failed to create session:", err)
+		} else {
+			creds = profile_session.Config.Credentials
+		}
 	} else {
 		if aws.AccessKey == "" || aws.SecretAccessKey == "" {
 			log.Fatal("Missing AccessKey or SecretAccessKey for AWS provider. Please check your configuration and retry")
@@ -211,10 +217,28 @@ func (a *AWS) GetState(st, versionID string) (sf *statefile.File, err error) {
 func (a *AWS) GetVersions(state string) (versions []Version, err error) {
 	versions = []Version{}
 	if a.noVersioning {
-		versions = append(versions, Version{
-			ID:           state,
-			LastModified: time.Now(),
+
+		results, error := a.svc.ListObjectsV2(&s3.ListObjectsV2Input{
+			Bucket: aws_sdk.String(a.bucket),
+			Prefix: aws_sdk.String(state),
 		})
+
+		if error != nil {
+			return
+		}
+
+		for _, v := range results.Contents {
+			versions = append(versions, Version{
+				ID:           *v.ETag,
+				LastModified: *v.LastModified,
+			})
+		}
+
+		// versions = append(versions, Version{
+		// 	ID:           state,
+		// 	LastModified: time.Now(),
+		// })
+
 		return
 	}
 
@@ -222,6 +246,7 @@ func (a *AWS) GetVersions(state string) (versions []Version, err error) {
 		Bucket: aws_sdk.String(a.bucket),
 		Prefix: aws_sdk.String(state),
 	})
+
 	if err != nil {
 		return
 	}

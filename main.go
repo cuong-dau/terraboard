@@ -121,7 +121,7 @@ func refreshDB(syncInterval uint16, d *db.Database, sp state.Provider) {
 	}
 }
 
-var version = "undefined"
+var version = "v2.3.0"
 
 func getVersion(w http.ResponseWriter, _ *http.Request) {
 	j, err := json.Marshal(map[string]string{
@@ -140,14 +140,15 @@ func getVersion(w http.ResponseWriter, _ *http.Request) {
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, HEAD, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
 		next.ServeHTTP(w, r)
 	})
 }
 
 // Main
 func main() {
+
 	c := config.LoadConfig(version)
 
 	util.SetBasePath(c.Web.BaseURL)
@@ -184,6 +185,7 @@ func main() {
 	r := mux.NewRouter()
 
 	// Handle API endpoints
+	log.Debug(util.GetFullPath("tf_versions"))
 	apiRouter := r.PathPrefix("/api/").Subrouter()
 	apiRouter.HandleFunc(util.GetFullPath("version"), getVersion)
 	apiRouter.HandleFunc(util.GetFullPath("user"), api.GetUser)
@@ -216,7 +218,7 @@ func main() {
 	go serveSwagger(int(c.Web.SwaggerPort), swaggerRouter)
 
 	// Serve static files (CSS, JS, images) from dir
-	spa := spaHandler{staticPath: "static", indexPath: "index.html"}
+	spa := spaHandler{staticPath: "static/terraboard-vuejs/dist", indexPath: "index.html"}
 	r.PathPrefix("/").Handler(spa)
 
 	// Add CORS Middleware to mux router
@@ -224,7 +226,7 @@ func main() {
 
 	// Start server
 	log.Debugf("Listening on port %d\n", c.Web.Port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", c.Web.Port), r))
+	log.Debug(http.ListenAndServe(fmt.Sprintf(":%v", c.Web.Port), r))
 }
 
 func serveSwagger(port int, router *mux.Router) {
